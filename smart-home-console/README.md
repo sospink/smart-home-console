@@ -1,6 +1,6 @@
 # 知境 · 智慧家居实训台双屏控制系统
 
-完整项目资料与产物入口见[上级项目导航](../README.md)。原始合同和采购清单位于[项目资料/合同与采购](../项目资料/合同与采购/)。本工程的开发和构建路径保持不变。
+完整安装包下载、开发环境、Web 构建、Android 编译及 Release 签名流程见[仓库 README](../README.md)。原始合同和采购清单位于[项目资料/合同与采购](../项目资料/合同与采购/)。本文命令均在当前软件工程目录执行。
 
 这是智慧家居实训台的双屏控制与工程管理系统。当前本机开发入口默认连接采购主屏 EdgeCore，并通过 HA 官方 Xiaomi Home 云链路控制已接入的 DMWG03LM 与筒灯。
 
@@ -16,14 +16,15 @@
 
 ## 快速启动
 
-要求 Node.js 22、pnpm 11。
+要求 Node.js 22.13+（22.x）、pnpm 11.9.0。真机 Web 配对使用 macOS 钥匙串。
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+export EDGE_TARGET="http://192.168.0.100:8787"
 pnpm dev
 ```
 
-打开：
+将示例 IP 替换为实际 Android 主屏地址；该地址不是 HA 地址。打开：
 
 - `http://localhost:8083/primary`
 - `http://localhost:8083/secondary`
@@ -37,6 +38,7 @@ pnpm dev
 
 ```bash
 pnpm check
+pnpm exec playwright install chromium
 pnpm e2e
 ```
 
@@ -53,6 +55,18 @@ pnpm e2e
 - 生产构建。
 
 Android 安装、工程管理、运维、APK 升级/回滚和残余安全风险见 `docs/DELIVERY_MANUAL.md`。
+
+## 构建与安装包
+
+```bash
+pnpm build
+cd android
+./gradlew :app:assembleDebug -PSMART_LAB_VERSION_CODE=9 -PSMART_LAB_VERSION_NAME=0.1.6
+```
+
+Android 构建需预先安装 JDK 17、Android SDK Platform 35 和 Build Tools 35.0.0，并配置 `JAVA_HOME`、`ANDROID_HOME`。Gradle 自动构建和同步前端，产物位于 `android/app/build/outputs/apk/debug/app-debug.apk`（相对软件工程目录）。`0.1.6 / 9` 是构建示例，不是已上传版本；Release 签名、安装和升级要求见[完整构建说明](../README.md)。
+
+仓库保留的安装包见 [output/apk](output/apk/)，最高版本为 `0.1.5-debug`；[SHA256SUMS](output/apk/SHA256SUMS) 用于校验文件完整性。未签名 Release 候选不能直接安装，现有 APK 不代表本次源码重新构建的结果。
 
 ## 目录
 

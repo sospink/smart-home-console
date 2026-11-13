@@ -6,5 +6,5 @@ onlyBuiltDependencies:
   - esbuild
   - simple-git-hooks
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
   simple-git-hooks: true

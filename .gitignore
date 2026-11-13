@@ -40,3 +40,13 @@ local.properties
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# Published APK artifacts only; other generated output stays local.
+!smart-home-console/output/
+smart-home-console/output/*
+!smart-home-console/output/apk/
+smart-home-console/output/apk/*
+!smart-home-console/output/apk/smart-lab-0.1.4-debug.apk
+!smart-home-console/output/apk/smart-lab-0.1.5-debug.apk
+!smart-home-console/output/apk/smart-lab-0.1.4-release-unsigned.apk
+!smart-home-console/output/apk/SHA256SUMS

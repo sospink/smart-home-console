@@ -7,15 +7,15 @@
 
 ## 构建
 
-需要 JDK 17+ 和 Android SDK 35。`app:preBuild` 会自动运行 panel-ui 生产构建并复制离线资源。
+完整环境准备、安装包下载、签名打包与安装流程见[仓库 README](../../README.md)。建议使用 JDK 17，安装 Android SDK Platform 35 和 Build Tools 35.0.0；先在上级软件工程目录执行 `pnpm install --frozen-lockfile`。下列编译命令在当前 `android/` 目录执行。`app:preBuild` 会自动运行 panel-ui 生产构建并复制离线资源。
 
 ```bash
-export JAVA_HOME="/path/to/jdk-17-or-newer"
+export JAVA_HOME="/path/to/jdk-17"
 export ANDROID_HOME="/path/to/android-sdk"
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebug -PSMART_LAB_VERSION_CODE=9 -PSMART_LAB_VERSION_NAME=0.1.6
 ```
 
-Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
+Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。版本参数为下一次构建示例，升级时按已安装版本递增；最低运行系统为 Android 11（API 30）。
 
 ## Home Assistant 真机适配
 
@@ -25,7 +25,7 @@ Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。
 
 ## 工控屏 Kiosk 安装
 
-Android 10+ 会限制普通应用从 `BOOT_COMPLETED` 直接拉起界面，因此正式部署必须把同一 APK 设为默认 HOME/Kiosk 启动器；`BootReceiver` 仍负责主屏 EdgeCore 服务自启。连接 ADB 后在仓库根目录执行：
+Android 10+ 会限制普通应用从 `BOOT_COMPLETED` 直接拉起界面，因此正式部署必须把同一 APK 设为默认 HOME/Kiosk 启动器；`BootReceiver` 仍负责主屏 EdgeCore 服务自启。连接 ADB 后在上级软件工程目录 `smart-home-console/` 执行：
 
 ```bash
 ADB=/path/to/adb ./scripts/install-android-kiosk.sh
@@ -40,10 +40,13 @@ SMART_LAB_KEYSTORE_FILE=/secure/path/smart-lab-release.jks
 SMART_LAB_KEYSTORE_PASSWORD=...
 SMART_LAB_KEY_ALIAS=smart-lab
 SMART_LAB_KEY_PASSWORD=...
-SMART_LAB_UI_UPDATE_PUBLIC_KEY=MCowBQYDK2VwAyEA...  # Ed25519 X.509 公钥的 Base64；不得放私钥
-SMART_LAB_VERSION_CODE=2                        # 每次升级必须递增
-SMART_LAB_VERSION_NAME=0.1.1
+# 可选：完整的 Ed25519 X.509 公钥 Base64，不得放私钥
+# SMART_LAB_UI_UPDATE_PUBLIC_KEY=REPLACE_WITH_PUBLIC_KEY_BASE64
+SMART_LAB_VERSION_CODE=9
+SMART_LAB_VERSION_NAME=0.1.6
 ```
+
+配置签名后，在 `android/` 执行 `./gradlew :app:assembleRelease`，产物为 `app/build/outputs/apk/release/app-release.apk`；未配置签名则生成 `app-release-unsigned.apk`，不能直接安装。版本号是示例，密码和密钥路径必须替换为实际配置。安装 Release 时，Kiosk 脚本需额外设置 `SMART_LAB_PACKAGE=cn.zhijing.smartlab`。
 
 同签名基线/升级 APK 可在 API 31+ 设备上验证安装、升级、降级回滚和再升级：
 
