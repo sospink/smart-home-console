@@ -1,0 +1,10 @@
+node_modules
+dist
+output
+.playwright-cli
+pnpm-lock.yaml
+tmp
+android/.gradle
+android/**/build
+android/app/src/main/assets/panel-ui
+android/data/schemas

@@ -1,0 +1,447 @@
+openapi: 3.1.0
+info:
+  title: 智慧家居实训台 EdgeCore API
+  version: 1.0.0
+  description: 主屏、副屏、管理端与正式 EdgeCore 共享的生产接口契约。内部测试夹具不属于交付 API。
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+  /terminals/pair:
+    post:
+      operationId: pairTerminal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TerminalPairRequest" }
+      responses:
+        "201": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /terminals/event-ticket:
+    post:
+      operationId: issueEventTicket
+      description: 仅已配对终端可以用自身 Bearer 换取 60 秒内有效、一次性且绑定主/副屏角色的事件票据；管理会话不能换取。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /snapshot:
+    get:
+      operationId: getSnapshot
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /ui-update/sync:
+    get:
+      operationId: synchronizeTerminalUi
+      description: 副屏以配对令牌查询主屏当前签名 UI 版本；版本不一致时才返回完整签名包，null 目标表示回到 APK 内置资源。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: currentVersion, in: query, schema: { type: string, maxLength: 48 } }
+      responses:
+        "200":
+          description: UI 同步目标
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, sequence]
+                properties:
+                  data: { $ref: "#/components/schemas/UiUpdateSync" }
+                  sequence: { type: integer, minimum: 0 }
+        "401": { $ref: "#/components/responses/Error" }
+  /devices/{deviceId}/commands:
+    post:
+      operationId: sendCommand
+      description: source 仅作旧客户端兼容字段；EdgeCore 必须从 Bearer 终端/管理员身份派生并覆盖，禁止请求体伪造操作来源。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: deviceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../packages/contracts/schemas/command-request.schema.json" }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "409": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /scenes/{sceneId}/execute:
+    post:
+      operationId: executeScene
+      description: source 仅作兼容字段，权威来源由 EdgeCore 从 Bearer 身份派生。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: sceneId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source]
+              additionalProperties: false
+              properties: { source: { enum: [primary, secondary, admin, automation] } }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "207": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /admin/login:
+    post:
+      operationId: adminLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [pin]
+              properties: { pin: { type: string, pattern: "^[0-9]{4,12}$" } }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /admin/config:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/bench-reset/preview:
+    get:
+      operationId: previewBenchReset
+      description: 按当前设备权威状态和已保存复位策略生成影响、排除、人工核对及阻断清单。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /admin/bench-reset:
+    post:
+      operationId: executeBenchReset
+      description: 逐设备经过正式命令状态机执行安全状态复位；保留告警、审计、配置与凭据，并在策略窗口内抑制回报触发自动联动。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "207": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /admin/handover:
+    get:
+      operationId: getHandoverChecklist
+      description: 返回当前权威交接检查、状态令牌及最近一次持久化交接记录。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /admin/handover/complete:
+    post:
+      operationId: completeHandover
+      description: 以客户端生成的 completionId 幂等留档；状态变化或风险未逐项确认时拒绝。
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HandoverCompleteRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /admin/logout:
+    post:
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/change-pin:
+    post:
+      operationId: changeAdminPin
+      description: 验证当前 PIN 后将 6–12 位新 PIN 原子写入 Android Keystore，并立即吊销本台全部旧管理会话；不影响主副屏终端令牌。
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [currentPin, newPin, confirmPin]
+              properties:
+                currentPin: { type: string, pattern: "^[0-9]{4,12}$" }
+                newPin: { type: string, pattern: "^[0-9]{6,12}$" }
+                confirmPin: { type: string, pattern: "^[0-9]{6,12}$" }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+  /admin/diagnostics:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "501": { $ref: "#/components/responses/Error" }
+    put:
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object } } }
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/database-backups:
+    get:
+      operationId: listDatabaseBackups
+      description: 列出正式 Android EdgeCore 最近 7 份权威数据库快照及 SHA-256；Mock 环境返回 501。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createDatabaseBackup
+      description: 管理员手工创建一致性 SQLite 快照，通过 quick_check 后写审计；空间不足时返回 507，且不会恢复或覆盖运行中数据库。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+        "507": { $ref: "#/components/responses/Error" }
+  /admin/database-backups/storage:
+    get:
+      operationId: getDatabaseBackupStorage
+      description: 返回正式主屏数据库快照目录容量、下一份快照估算、256 MB 运行保留空间及创建门禁状态。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+  /admin/data-lifecycle:
+    get:
+      operationId: getDataLifecycleReport
+      description: 返回正式主屏数据库实际占用、审计/告警/命令/场景执行四类长期数据的记录数与最早时间、权威保护级别，以及基于有效快照中位增长率的容量预测；只读，不提供自动删除。
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+  /admin/database-backups/{filename}:
+    get:
+      operationId: downloadDatabaseBackup
+      description: 流式导出白名单文件名对应的数据库快照，供离机灾备；每次导出写审计。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: filename
+          required: true
+          schema: { type: string, pattern: "^smart-lab-[0-9T.\\-]+Z\\.db$" }
+      responses:
+        "200":
+          description: SQLite database artifact
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "501": { $ref: "#/components/responses/Error" }
+  /admin/ui-update:
+    get:
+      operationId: getUiUpdateStatus
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+    post:
+      operationId: installSignedUiUpdate
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UiUpdateInstallRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+  /admin/ui-update/rollback:
+    post:
+      operationId: rollbackUiUpdate
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/backup:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+    post:
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/audits:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/resources/{resource}:
+    get:
+      operationId: queryAdminResource
+      description: 管理后台统一分页查询。读取按资源、关键字和状态在服务端过滤，并返回页码纠正后的分页元数据。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: resource
+          in: path
+          required: true
+          schema:
+            enum: [rooms, devices, scenes, automations, alerts, gateways, terminals, audits]
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: 分页结果
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, sequence]
+                properties:
+                  data:
+                    type: object
+                    required: [items, page, pageSize, total, totalPages]
+                    properties:
+                      items: { type: array, items: {} }
+                      page: { type: integer, minimum: 1 }
+                      pageSize: { type: integer, minimum: 1, maximum: 100 }
+                      total: { type: integer, minimum: 0 }
+                      totalPages: { type: integer, minimum: 1 }
+                  sequence: { type: integer, minimum: 0 }
+        "401": { $ref: "#/components/responses/Error" }
+  /admin/gateways/{gatewayId}/test:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: gatewayId, in: path, required: true, schema: { type: string } }
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/alerts/{alertId}/recover:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: alertId, in: path, required: true, schema: { type: string } }
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/terminals/pairing-code:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { $ref: "#/components/responses/Envelope" } }
+  /admin/terminals/{terminalId}/revoke:
+    post:
+      operationId: revokeTerminalPairing
+      description: 撤销非主屏终端，原子清空服务端令牌摘要、作废未使用事件票据并主动断开在线事件流；旧配置/备份不能复活凭据，必须使用新的一次性配对码重配。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: terminalId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /alerts/{alertId}/acknowledge:
+    post:
+      description: source 仅作兼容字段，权威来源由 EdgeCore 从 Bearer 身份派生。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: alertId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [source]
+              properties:
+                source: { type: string, enum: [primary, secondary, admin, automation] }
+      responses:
+        "200": { $ref: "#/components/responses/Envelope" }
+        "401": { $ref: "#/components/responses/Error" }
+  /events:
+    get:
+      description: WebSocket 事件流。必须携带未使用、未过期的一次性 ticket，surface 必须与票据绑定角色一致；连接尝试后票据立即作废。每个事件必须携带单调递增 sequence。
+      parameters:
+        - { name: ticket, in: query, required: true, schema: { type: string, minLength: 16 } }
+        - { name: surface, in: query, required: true, schema: { type: string, enum: [primary, secondary] } }
+      responses: { "101": { description: Switching Protocols } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  schemas:
+    HandoverCompleteRequest:
+      type: object
+      additionalProperties: false
+      required: [completionId, completedBy, stateToken, acknowledgedWarnings, note]
+      properties:
+        completionId: { type: string, pattern: "^[A-Za-z0-9_-]{8,80}$" }
+        completedBy: { type: string, minLength: 2, maxLength: 40 }
+        stateToken: { type: string, minLength: 64, maxLength: 64 }
+        acknowledgedWarnings:
+          type: array
+          uniqueItems: true
+          items:
+            enum: [ACTIVE_NONCRITICAL_ALERTS, OFFLINE_DEVICES, MANUAL_BASELINE_CHECK, PAIRED_TERMINALS_OFFLINE]
+        note: { type: string, maxLength: 200 }
+    BenchResetPolicy:
+      type: object
+      additionalProperties: false
+      required: [power, cover, automationSuppressionSeconds]
+      properties:
+        power: { enum: [off, unchanged] }
+        cover: { enum: [closed, open, unchanged] }
+        automationSuppressionSeconds: { type: integer, minimum: 3, maximum: 30 }
+    TerminalPairRequest:
+      type: object
+      additionalProperties: false
+      required: [pairingCode, deviceId, name, role, version]
+      properties:
+        pairingCode: { type: string, pattern: "^[0-9]{6}$" }
+        deviceId: { type: string, minLength: 1, maxLength: 120 }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        role: { enum: [secondary] }
+        version: { type: string, minLength: 1, maxLength: 40 }
+    UiUpdateInstallRequest:
+      type: object
+      additionalProperties: false
+      required: [manifestJson, signature, files]
+      properties:
+        manifestJson: { type: string, maxLength: 131072 }
+        signature: { type: string, maxLength: 1024 }
+        files:
+          type: object
+          additionalProperties: { type: string, contentEncoding: base64 }
+          maxProperties: 256
+    UiUpdateSync:
+      type: object
+      additionalProperties: false
+      properties:
+        targetVersion: { type: [string, "null"], maxLength: 48 }
+        update:
+          oneOf:
+            - { $ref: "#/components/schemas/UiUpdateInstallRequest" }
+            - { type: "null" }
+  responses:
+    Envelope:
+      description: 带 sequence 的统一响应
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data, sequence]
+            properties: { data: {}, sequence: { type: integer, minimum: 0 } }
+    Error:
+      description: 错误响应
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties: { error: { type: string } }

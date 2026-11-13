@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-lab.local/schemas/command-request.schema.json",
+  "title": "CommandRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requestId", "property", "value", "source"],
+  "properties": {
+    "requestId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "property": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "value": {
+      "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+    },
+    "source": { "enum": ["primary", "secondary", "admin", "automation"] }
+  }
+}

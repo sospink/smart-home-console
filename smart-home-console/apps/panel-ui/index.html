@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' http: ws: https: wss:; font-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+    />
+    <meta name="theme-color" content="#f5f6f7" />
+    <script>
+      (() => {
+        let theme = "light";
+        try {
+          const stored = localStorage.getItem("zhijing-theme");
+          if (stored === "dark" || stored === "light") theme = stored;
+        } catch {}
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#101113" : "#f5f6f7");
+      })();
+    </script>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230e1718'/%3E%3Cpath d='M18 36V24l14-9 14 9v12l-14 9-14-9Z' fill='none' stroke='%2361e1d2' stroke-width='4'/%3E%3Ccircle cx='32' cy='30' r='5' fill='%23e3bd77'/%3E%3C/svg%3E"
+    />
+    <title>知境 · 智慧家居实训控制系统</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

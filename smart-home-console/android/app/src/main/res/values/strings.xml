@@ -1,0 +1,5 @@
+<resources>
+  <string name="app_name">知境·智慧家居实训控制系统</string>
+  <string name="edge_channel_name">本地设备服务</string>
+  <string name="edge_notification_title">知境 EdgeCore 正在运行</string>
+</resources>

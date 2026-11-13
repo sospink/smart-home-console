@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - esbuild
+  - simple-git-hooks
+allowBuilds:
+  esbuild: set this to true or false
+  simple-git-hooks: true

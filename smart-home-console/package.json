@@ -1,0 +1,43 @@
+{
+  "name": "smart-home-console",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "node scripts/run-hardware-web.mjs",
+    "dev:hardware": "node scripts/run-hardware-web.mjs",
+    "dev:test": "EDGE_ENABLE_TEST_SUPPORT=1 concurrently -k -n EDGE,UI -c yellow,cyan \"pnpm --filter @smart-lab/mock-edge dev\" \"pnpm --filter @smart-lab/panel-ui dev\"",
+    "hardware:pair": "node scripts/pair-hardware-web.mjs",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "contract:check": "tsx scripts/validate-contracts.ts",
+    "license:check": "node scripts/check-licenses.mjs",
+    "bundle:check": "node scripts/check-panel-bundles.mjs",
+    "delivery-boundary:check": "node scripts/audit-delivery-boundary.mjs",
+    "ui-update:build": "node scripts/build-ui-update.mjs",
+    "e2e": "playwright test",
+    "check": "pnpm lint && pnpm format && pnpm contract:check && pnpm license:check && pnpm delivery-boundary:check && pnpm typecheck && pnpm test && pnpm build && pnpm bundle:check",
+    "prepare": "node scripts/install-git-hooks.mjs"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint && pnpm typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "concurrently": "10.0.3",
+    "eslint": "^10.7.0",
+    "eslint-plugin-vue": "^10.10.0",
+    "prettier": "^3.9.6",
+    "simple-git-hooks": "^2.13.1",
+    "tsx": "4.21.0",
+    "typescript-eslint": "^8.65.0",
+    "yaml": "^2.9.0"
+  }
+}

@@ -1,0 +1,42 @@
+# Local system files and dependencies
+.DS_Store
+node_modules/
+.idea/
+.vscode/
+
+# Generated files and local debug output
+build/
+dist/
+coverage/
+.gradle/
+.kotlin/
+.vite/
+output/
+playwright-report/
+test-results/
+.playwright-cli/
+.playwright-mcp/
+tmp/
+历史归档/
+*.log
+*.apk
+*.aab
+*.hprof
+
+# Runtime configuration, credentials, signing keys, and databases
+.env
+.env.*
+!.env.example
+!.env.sample
+local.properties
+*.jks
+*.keystore
+*.pem
+*.key
+*.p12
+*.pfx
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

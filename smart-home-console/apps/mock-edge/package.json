@@ -1,0 +1,22 @@
+{
+  "name": "@smart-lab/mock-edge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@smart-lab/contracts": "workspace:*",
+    "ws": "8.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.13",
+    "@types/ws": "8.18.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}

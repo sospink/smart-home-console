@@ -1,0 +1,283 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="slider"],
+.pressable {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+
+button::selection,
+a::selection,
+[role="button"]::selection,
+[role="tab"]::selection {
+  background: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.muted {
+  color: var(--muted);
+}
+.danger {
+  color: var(--danger);
+}
+
+.panel {
+  position: relative;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-panel);
+}
+
+.panel::before {
+  display: none;
+}
+
+.pressable {
+  transition:
+    transform 160ms var(--ease-out),
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+.pressable:active {
+  transform: scale(0.975);
+}
+
+.ripple-host {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.touch-ripple {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(127, 208, 255, 0.35) 0, rgba(50, 170, 255, 0.14) 35%, transparent 70%);
+  transform: scale(0.08);
+  opacity: 0;
+  animation: touch-ripple 580ms var(--ease-out);
+  mix-blend-mode: var(--ripple-blend, multiply);
+}
+
+:root[data-theme="dark"] {
+  --ripple-blend: screen;
+}
+
+.command-surface {
+  position: relative;
+}
+.command-surface::after {
+  content: "";
+  position: absolute;
+  z-index: 18;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+.command-surface.pending::after {
+  opacity: 1;
+  background: linear-gradient(
+    102deg,
+    transparent 25%,
+    rgba(37, 189, 255, 0.11) 48%,
+    rgba(146, 218, 255, 0.24) 50%,
+    rgba(37, 189, 255, 0.11) 52%,
+    transparent 75%
+  );
+  transform: translateX(-100%);
+  animation: energy-sweep 820ms ease-in-out infinite;
+}
+.command-surface.confirmed::after {
+  animation: confirmed-wave 760ms var(--ease-out);
+}
+.command-surface.failed,
+.command-surface.timeout {
+  animation: command-shake 340ms ease-out;
+}
+.command-surface.failed::after,
+.command-surface.timeout::after {
+  opacity: 1;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 94, 114, 0.48),
+    inset 0 0 26px rgba(255, 42, 76, 0.12);
+  animation: failure-fade 1.4s ease-out forwards;
+}
+
+.motion-paused *,
+.motion-paused *::before,
+.motion-paused *::after {
+  animation-play-state: paused !important;
+}
+
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 360ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 120ms !important;
+}
+
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  scroll-behavior: auto !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes touch-ripple {
+  0% {
+    transform: scale(0.08);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes energy-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes confirmed-wave {
+  0% {
+    opacity: 0;
+    box-shadow:
+      inset 0 0 0 0 rgba(32, 229, 155, 0.6),
+      0 0 0 0 rgba(32, 229, 155, 0.22);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    box-shadow:
+      inset 0 0 0 2px rgba(32, 229, 155, 0),
+      0 0 0 14px rgba(32, 229, 155, 0);
+  }
+}
+@keyframes failure-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes command-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  55% {
+    transform: translateX(3px);
+  }
+  78% {
+    transform: translateX(-1px);
+  }
+}

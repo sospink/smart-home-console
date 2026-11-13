@@ -1,0 +1,159 @@
+[
+  {
+    "name": "健康信息使用公共包络",
+    "method": "GET",
+    "path": "/api/v1/health",
+    "auth": "none",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["controlDomainId", "mode", "version", "serverTime", "uptimeSeconds", "gateways"]
+  },
+  {
+    "name": "快照使用公共包络",
+    "method": "GET",
+    "path": "/api/v1/snapshot",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["sequence", "devices", "scenes", "alerts", "commands", "executions", "health"]
+  },
+  {
+    "name": "设备列表是数组",
+    "method": "GET",
+    "path": "/api/v1/devices",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "array",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "场景列表是数组",
+    "method": "GET",
+    "path": "/api/v1/scenes",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "array",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "告警列表是数组",
+    "method": "GET",
+    "path": "/api/v1/alerts",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "array",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "未登录不得读取管理配置",
+    "method": "GET",
+    "path": "/api/v1/admin/config",
+    "auth": "none",
+    "expectedStatus": 401,
+    "bodyKind": "error",
+    "dataKind": "none",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "管理员可读取配置",
+    "method": "GET",
+    "path": "/api/v1/admin/config",
+    "auth": "admin",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["version", "rooms", "devices", "scenes", "automations", "gateways", "terminals", "benchResetPolicy"]
+  },
+  {
+    "name": "管理资源分页字段一致",
+    "method": "GET",
+    "path": "/api/v1/admin/resources/devices?page=1&pageSize=2",
+    "auth": "admin",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["items", "page", "pageSize", "total", "totalPages"]
+  },
+  {
+    "name": "管理审计返回数组",
+    "method": "GET",
+    "path": "/api/v1/admin/audits",
+    "auth": "admin",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "array",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "未知管理资源返回统一错误",
+    "method": "GET",
+    "path": "/api/v1/admin/resources/unknown",
+    "auth": "admin",
+    "expectedStatus": 404,
+    "bodyKind": "error",
+    "dataKind": "none",
+    "requiredDataKeys": []
+  },
+  {
+    "name": "设备命令返回统一状态机字段",
+    "method": "POST",
+    "path": "/api/v1/devices/{{writableDeviceId}}/commands",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requestBody": {
+      "requestId": "shared-contract-command",
+      "property": "brightness",
+      "value": 55,
+      "source": "primary"
+    },
+    "requiredDataKeys": ["id", "requestId", "deviceId", "property", "value", "source", "status", "createdAt"]
+  },
+  {
+    "name": "场景执行返回统一进度字段",
+    "method": "POST",
+    "path": "/api/v1/scenes/{{sceneId}}/execute",
+    "auth": "terminal",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requestBody": { "source": "primary" },
+    "requiredDataKeys": ["id", "sceneId", "source", "status", "completedActions", "totalActions", "startedAt"]
+  },
+  {
+    "name": "设备复位预览返回影响和保留边界",
+    "method": "GET",
+    "path": "/api/v1/admin/bench-reset/preview",
+    "auth": "admin",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["generatedAt", "canExecute", "blockers", "items", "retained"]
+  },
+  {
+    "name": "运行交接检查单返回当前状态令牌与风险分类",
+    "method": "GET",
+    "path": "/api/v1/admin/handover",
+    "auth": "admin",
+    "expectedStatus": 200,
+    "bodyKind": "envelope",
+    "dataKind": "object",
+    "requiredDataKeys": ["generatedAt", "stateToken", "canComplete", "blockers", "warnings", "summary", "lastCompletion"]
+  },
+  {
+    "name": "WebSocket 首帧是带序号的完整快照",
+    "method": "WS",
+    "path": "/api/v1/events",
+    "auth": "terminal",
+    "expectedStatus": 101,
+    "bodyKind": "event",
+    "dataKind": "object",
+    "requiredDataKeys": ["devices", "scenes", "alerts", "commands", "executions", "health"]
+  }
+]
